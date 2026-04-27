@@ -285,10 +285,16 @@ function renderDetail() {
       <div class="skill-block">
         <div class="skill-main">
           <div class="skill-left">
-            <div class="skill-title">
-              ${expandIndicatorHtml}
-              <span class="skill-title-text">${escapeHtml(skill.name)}</span>
-            </div>
+            ${
+              hasSubskills
+                ? `<button class="skill-toggle-area" type="button" aria-expanded="${isExpanded ? "true" : "false"}" aria-label="${skill.name}の詳細を${isExpanded ? "閉じる" : "開く"}">
+                     <div class="skill-title">
+                       ${expandIndicatorHtml}
+                       <span class="skill-title-text">${escapeHtml(skill.name)}</span>
+                     </div>
+                   </button>`
+                : `<div class="skill-title"><span class="skill-title-text">${escapeHtml(skill.name)}</span></div>`
+            }
           </div>
           <div class="skill-controls">
             <button class="badge ${meta.className}" type="button" title="${meta.label}" aria-label="${skill.name}：${meta.label}">
@@ -320,9 +326,9 @@ function renderDetail() {
     });
 
     if (hasSubskills) {
-      bindPress(card.querySelector(".skill-main"), (event) => {
-        const interactive = event.target.closest(".badge, .edit-skill, .delete-skill");
-        if (interactive) return;
+      const toggleArea = card.querySelector(".skill-toggle-area");
+      bindPress(toggleArea, (event) => {
+        event.stopPropagation();
         toggleSubskillPanel(skill.id);
       });
 
@@ -331,6 +337,12 @@ function renderDetail() {
           event.stopPropagation();
           openSubskillModal("addSubskill", { skillId: skill.id });
         });
+
+        const subskillPanel = card.querySelector(".subskill-panel");
+        subskillPanel.addEventListener("click", (event) => {
+          event.stopPropagation();
+        });
+
         const subskillList = card.querySelector(".subskill-list");
 
         skill.subskills.forEach((subskill) => {

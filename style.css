@@ -1031,3 +1031,32 @@ h3 {
 .skill-card.expandable .skill-main {
   cursor: pointer;
 }
+
+
+.skill-toggle-area {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.skill-toggle-area .skill-title {
+  pointer-events: none;
+}
+
+.skill-card.expandable .skill-main {
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  .skill-toggle-area {
+    width: auto;
+    max-width: 100%;
+  }
+}
