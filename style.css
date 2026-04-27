@@ -581,3 +581,10 @@ h3 {
   font-size: 14px;
   font-weight: 700;
 }
+
+
+@media (min-width: 520px) {
+  .detail-actions {
+    flex-wrap: wrap;
+  }
+}

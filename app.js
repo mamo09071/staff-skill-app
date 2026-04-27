@@ -21,21 +21,6 @@ const firebaseConfig = {
 };
 
 const INITIAL_SKILLS = [
-  { name: "レジ操作", status: "×" },
-  { name: "店内用バッグ渡し", status: "×" },
-  { name: "商品補充", status: "×" },
-  { name: "ストック整理", status: "×" },
-  { name: "売場作成", status: "×" },
-  { name: "マネキン着せ替え", status: "×" },
-  { name: "特売準備", status: "×" },
-  { name: "電話対応", status: "×" },
-  { name: "清掃／クリンネス", status: "×" },
-  { name: "レジ締め", status: "×" },
-  { name: "入荷処理", status: "×" },
-  { name: "開店準備", status: "×" },
-  { name: "マークダウン作業", status: "×" },
-  { name: "フィッティング対応", status: "×" },
-  { name: "ZOZO集約", status: "×" },
   {
     name: "開店作業",
     status: "×",
@@ -54,7 +39,22 @@ const INITIAL_SKILLS = [
       { name: "WS書込み", status: "×" },
       { name: "日報一言メモ", status: "×" }
     ]
-  }
+  },
+  { name: "レジ操作", status: "×" },
+  { name: "店内用バッグ渡し", status: "×" },
+  { name: "商品補充", status: "×" },
+  { name: "ストック整理", status: "×" },
+  { name: "売場作成", status: "×" },
+  { name: "マネキン着せ替え", status: "×" },
+  { name: "特売準備", status: "×" },
+  { name: "電話対応", status: "×" },
+  { name: "清掃／クリンネス", status: "×" },
+  { name: "レジ締め", status: "×" },
+  { name: "入荷処理", status: "×" },
+  { name: "開店準備", status: "×" },
+  { name: "マークダウン作業", status: "×" },
+  { name: "フィッティング対応", status: "×" },
+  { name: "ZOZO集約", status: "×" }
 ];
 
 const STATUS_ORDER = ["×", "△", "〇"];
@@ -94,6 +94,7 @@ const elements = {
   staffRankBadge: document.querySelector("#staffRankBadge"),
   renameStaffBtn: document.querySelector("#renameStaffBtn"),
   editRankBtn: document.querySelector("#editRankBtn"),
+  resetSkillsBtn: document.querySelector("#resetSkillsBtn"),
   deleteStaffBtn: document.querySelector("#deleteStaffBtn"),
   addSkillBtn: document.querySelector("#addSkillBtn"),
   skillList: document.querySelector("#skillList"),
@@ -406,6 +407,20 @@ async function updateRank(rank) {
     updatedAt: serverTimestamp()
   });
   showToast("等級を更新しました");
+}
+
+
+async function resetSkillsToInitial() {
+  const staff = getCurrentStaff();
+  if (!staff) return;
+
+  if (!confirm("このスタッフのスキルを最新の初期スキル構成に更新しますか？\n現在のスキル一覧は上書きされます。")) return;
+
+  await updateDoc(staffDoc(staff.id), {
+    skills: createInitialSkills(),
+    updatedAt: serverTimestamp()
+  });
+  showToast("最新の初期スキルに更新しました");
 }
 
 async function deleteStaff() {
@@ -773,6 +788,7 @@ elements.addStaffBtn.addEventListener("click", () => openModal("addStaff"));
 elements.backBtn.addEventListener("click", showList);
 elements.renameStaffBtn.addEventListener("click", () => openModal("renameStaff"));
 elements.editRankBtn.addEventListener("click", () => openModal("editRank"));
+elements.resetSkillsBtn.addEventListener("click", resetSkillsToInitial);
 elements.deleteStaffBtn.addEventListener("click", deleteStaff);
 elements.addSkillBtn.addEventListener("click", () => openModal("addSkill"));
 elements.cancelModalBtn.addEventListener("click", closeModal);
