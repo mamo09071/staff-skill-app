@@ -669,8 +669,9 @@ function openModal(mode, payload = null) {
   if (mode === "addStaff") {
     title = "スタッフ追加";
     label = "スタッフ名";
+    value = "";
     rankValue = DEFAULT_RANK;
-    useRankSelect = true;
+    useRankSelect = false;
   }
 
   if (mode === "renameStaff" && staff) {
@@ -739,7 +740,7 @@ async function saveModal() {
   }
 
   try {
-    if (modalMode === "addStaff") await addStaff(value, rankValue);
+    if (modalMode === "addStaff") await addStaff(value, DEFAULT_RANK);
     if (modalMode === "renameStaff") await renameStaff(value);
     if (modalMode === "editRank") await updateRank(rankValue);
     if (modalMode === "addSkill") await addSkill(value);
