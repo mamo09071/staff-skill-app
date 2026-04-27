@@ -1026,3 +1026,8 @@ h3 {
     align-items: flex-start;
   }
 }
+
+
+.skill-card.expandable .skill-main {
+  cursor: pointer;
+}

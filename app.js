@@ -320,8 +320,8 @@ function renderDetail() {
     });
 
     if (hasSubskills) {
-      bindPress(card, (event) => {
-        const interactive = event.target.closest(".badge, .edit-skill, .delete-skill, .add-subskill-btn, .edit-subskill, .delete-subskill");
+      bindPress(card.querySelector(".skill-main"), (event) => {
+        const interactive = event.target.closest(".badge, .edit-skill, .delete-skill");
         if (interactive) return;
         toggleSubskillPanel(skill.id);
       });
