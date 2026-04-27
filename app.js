@@ -300,15 +300,15 @@ function renderDetail() {
       </div>
     `;
 
-    card.querySelector(".badge").addEventListener("click", () => toggleSkillStatus(skill.id));
-    card.querySelector(".edit-skill").addEventListener("click", () => openModal("editSkill", { skillId: skill.id }));
-    card.querySelector(".delete-skill").addEventListener("click", () => deleteSkill(skill.id));
+    bindPress(card.querySelector(".badge"), () => toggleSkillStatus(skill.id));
+    bindPress(card.querySelector(".edit-skill"), () => openModal("editSkill", { skillId: skill.id }));
+    bindPress(card.querySelector(".delete-skill"), () => deleteSkill(skill.id));
 
     if (hasSubskills) {
-      card.querySelector(".toggle-subskills-btn").addEventListener("click", () => toggleSubskillPanel(skill.id));
+      bindPress(card.querySelector(".toggle-subskills-btn"), () => toggleSubskillPanel(skill.id));
 
       if (isExpanded) {
-        card.querySelector(".add-subskill-btn").addEventListener("click", () => openSubskillModal("addSubskill", { skillId: skill.id }));
+        bindPress(card.querySelector(".add-subskill-btn"), () => openSubskillModal("addSubskill", { skillId: skill.id }));
         const subskillList = card.querySelector(".subskill-list");
 
         skill.subskills.forEach((subskill) => {
@@ -325,9 +325,9 @@ function renderDetail() {
               <button class="mini-btn delete-subskill" type="button">削除</button>
             </div>
           `;
-          row.querySelector(".badge").addEventListener("click", () => toggleSubskillStatus(skill.id, subskill.id));
-          row.querySelector(".edit-subskill").addEventListener("click", () => openSubskillModal("editSubskill", { skillId: skill.id, subskillId: subskill.id }));
-          row.querySelector(".delete-subskill").addEventListener("click", () => deleteSubskill(skill.id, subskill.id));
+          bindPress(row.querySelector(".badge"), () => toggleSubskillStatus(skill.id, subskill.id));
+          bindPress(row.querySelector(".edit-subskill"), () => openSubskillModal("editSubskill", { skillId: skill.id, subskillId: subskill.id }));
+          bindPress(row.querySelector(".delete-subskill"), () => deleteSubskill(skill.id, subskill.id));
           subskillList.appendChild(row);
         });
       }
@@ -762,6 +762,16 @@ function showToast(message) {
   }, 1800);
 }
 
+
+function bindPress(target, handler) {
+  if (!target) return;
+  target.addEventListener("click", handler);
+  target.addEventListener("touchend", (event) => {
+    event.preventDefault();
+    handler(event);
+  }, { passive: false });
+}
+
 function escapeHtml(text) {
   return String(text)
     .replaceAll("&", "&amp;")
@@ -771,16 +781,16 @@ function escapeHtml(text) {
     .replaceAll("'", "&#039;");
 }
 
-elements.addStaffBtn.addEventListener("click", () => openModal("addStaff"));
-elements.backBtn.addEventListener("click", showList);
-elements.renameStaffBtn.addEventListener("click", () => openModal("renameStaff"));
-elements.editRankBtn.addEventListener("click", () => openModal("editRank"));
-elements.deleteStaffBtn.addEventListener("click", deleteStaff);
-elements.addSkillBtn.addEventListener("click", () => openModal("addSkill"));
-elements.cancelModalBtn.addEventListener("click", closeModal);
-elements.saveModalBtn.addEventListener("click", saveModal);
-elements.cancelSubskillModalBtn.addEventListener("click", closeSubskillModal);
-elements.saveSubskillModalBtn.addEventListener("click", saveSubskillModal);
+elements.addStaffBtn && bindPress(elements.addStaffBtn, () => openModal("addStaff"));
+elements.backBtn && bindPress(elements.backBtn, showList);
+elements.renameStaffBtn && bindPress(elements.renameStaffBtn, () => openModal("renameStaff"));
+elements.editRankBtn && bindPress(elements.editRankBtn, () => openModal("editRank"));
+elements.deleteStaffBtn && bindPress(elements.deleteStaffBtn, deleteStaff);
+elements.addSkillBtn && bindPress(elements.addSkillBtn, () => openModal("addSkill"));
+elements.cancelModalBtn && bindPress(elements.cancelModalBtn, closeModal);
+elements.saveModalBtn && bindPress(elements.saveModalBtn, saveModal);
+elements.cancelSubskillModalBtn && bindPress(elements.cancelSubskillModalBtn, closeSubskillModal);
+elements.saveSubskillModalBtn && bindPress(elements.saveSubskillModalBtn, saveSubskillModal);
 
 elements.modal.addEventListener("click", (event) => {
   if (event.target === elements.modal) closeModal();
