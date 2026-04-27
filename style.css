@@ -588,3 +588,175 @@ h3 {
     flex-wrap: wrap;
   }
 }
+
+
+/* iPhoneでもPCに近い見え方にする調整 */
+.app {
+  max-width: 760px;
+}
+
+.detail-top {
+  align-items: center;
+}
+
+.detail-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.staff-card,
+.skill-card {
+  border-radius: 18px;
+}
+
+.skill-card {
+  padding: 14px 16px;
+}
+
+.skill-title {
+  font-size: 17px;
+}
+
+.mini-btn,
+.toggle-subskills-btn,
+.sub-btn,
+.danger-btn {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.modal-card {
+  width: min(100%, 520px);
+}
+
+.staff-name {
+  font-size: 20px;
+}
+
+@media (max-width: 640px) {
+  .app {
+    max-width: 100%;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .app-header {
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  .detail-top {
+    align-items: flex-start;
+  }
+
+  .detail-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .detail-actions .sub-btn,
+  .detail-actions .danger-btn {
+    min-width: unset;
+    padding: 10px 12px;
+  }
+
+  .skill-card {
+    padding: 12px;
+  }
+
+  .skill-main {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .skill-controls {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .staff-name-row {
+    margin-bottom: 8px;
+  }
+
+  .staff-name {
+    font-size: 18px;
+  }
+
+  .rank-badge {
+    min-height: 30px;
+    font-size: 14px;
+    padding: 4px 10px;
+  }
+
+  .staff-rank-inline {
+    min-height: 24px;
+    font-size: 12px;
+    padding: 3px 8px;
+  }
+
+  .status-help {
+    gap: 10px;
+  }
+
+  .subskill-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .subskill-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .subskill-controls {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .modal-card {
+    width: 100%;
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .modal-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .text-input {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .detail-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detail-actions .danger-btn {
+    grid-column: span 2;
+  }
+
+  .modal-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-panel {
+    grid-template-columns: 1fr;
+  }
+}
