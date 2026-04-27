@@ -261,10 +261,10 @@ function renderDetail() {
     const isExpanded = Boolean(skill.isExpanded);
 
     const card = document.createElement("div");
-    card.className = "skill-card";
+    card.className = `skill-card${hasSubskills ? " expandable" : ""}${isExpanded ? " expanded" : ""}`;
 
-    const subskillButtonHtml = hasSubskills
-      ? `<button class="toggle-subskills-btn" type="button">${isExpanded ? "詳細を閉じる" : "詳細を見る"}</button>`
+    const expandIndicatorHtml = hasSubskills
+      ? `<span class="expand-indicator">${isExpanded ? "−" : "+"}</span>`
       : "";
 
     const subskillsHtml = hasSubskills && isExpanded
@@ -285,10 +285,12 @@ function renderDetail() {
       <div class="skill-block">
         <div class="skill-main">
           <div class="skill-left">
-            <div class="skill-title">${escapeHtml(skill.name)}</div>
+            <div class="skill-title">
+              ${expandIndicatorHtml}
+              <span class="skill-title-text">${escapeHtml(skill.name)}</span>
+            </div>
           </div>
           <div class="skill-controls">
-            ${subskillButtonHtml}
             <button class="badge ${meta.className}" type="button" title="${meta.label}" aria-label="${skill.name}：${meta.label}">
               ${skill.status}
             </button>
@@ -300,15 +302,35 @@ function renderDetail() {
       </div>
     `;
 
-    bindPress(card.querySelector(".badge"), () => toggleSkillStatus(skill.id));
-    bindPress(card.querySelector(".edit-skill"), () => openModal("editSkill", { skillId: skill.id }));
-    bindPress(card.querySelector(".delete-skill"), () => deleteSkill(skill.id));
+    const badgeButton = card.querySelector(".badge");
+    const editButton = card.querySelector(".edit-skill");
+    const deleteButton = card.querySelector(".delete-skill");
+
+    bindPress(badgeButton, (event) => {
+      event.stopPropagation();
+      toggleSkillStatus(skill.id);
+    });
+    bindPress(editButton, (event) => {
+      event.stopPropagation();
+      openModal("editSkill", { skillId: skill.id });
+    });
+    bindPress(deleteButton, (event) => {
+      event.stopPropagation();
+      deleteSkill(skill.id);
+    });
 
     if (hasSubskills) {
-      bindPress(card.querySelector(".toggle-subskills-btn"), () => toggleSubskillPanel(skill.id));
+      bindPress(card, (event) => {
+        const interactive = event.target.closest(".badge, .edit-skill, .delete-skill, .add-subskill-btn, .edit-subskill, .delete-subskill");
+        if (interactive) return;
+        toggleSubskillPanel(skill.id);
+      });
 
       if (isExpanded) {
-        bindPress(card.querySelector(".add-subskill-btn"), () => openSubskillModal("addSubskill", { skillId: skill.id }));
+        bindPress(card.querySelector(".add-subskill-btn"), (event) => {
+          event.stopPropagation();
+          openSubskillModal("addSubskill", { skillId: skill.id });
+        });
         const subskillList = card.querySelector(".subskill-list");
 
         skill.subskills.forEach((subskill) => {
@@ -325,9 +347,18 @@ function renderDetail() {
               <button class="mini-btn delete-subskill" type="button">削除</button>
             </div>
           `;
-          bindPress(row.querySelector(".badge"), () => toggleSubskillStatus(skill.id, subskill.id));
-          bindPress(row.querySelector(".edit-subskill"), () => openSubskillModal("editSubskill", { skillId: skill.id, subskillId: subskill.id }));
-          bindPress(row.querySelector(".delete-subskill"), () => deleteSubskill(skill.id, subskill.id));
+          bindPress(row.querySelector(".badge"), (event) => {
+            event.stopPropagation();
+            toggleSubskillStatus(skill.id, subskill.id);
+          });
+          bindPress(row.querySelector(".edit-subskill"), (event) => {
+            event.stopPropagation();
+            openSubskillModal("editSubskill", { skillId: skill.id, subskillId: subskill.id });
+          });
+          bindPress(row.querySelector(".delete-subskill"), (event) => {
+            event.stopPropagation();
+            deleteSubskill(skill.id, subskill.id);
+          });
           subskillList.appendChild(row);
         });
       }
@@ -766,10 +797,6 @@ function showToast(message) {
 function bindPress(target, handler) {
   if (!target) return;
   target.addEventListener("click", handler);
-  target.addEventListener("touchend", (event) => {
-    event.preventDefault();
-    handler(event);
-  }, { passive: false });
 }
 
 function escapeHtml(text) {

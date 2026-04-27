@@ -1,4 +1,4 @@
-const CACHE_NAME = "staff-skill-pwa-ios-fix-v2";
+const CACHE_NAME = "staff-skill-pwa-smart-ios-v3";
 const ASSETS = [
   "./",
   "./index.html",

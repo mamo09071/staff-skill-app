@@ -839,3 +839,190 @@ h3 {
     grid-column: span 2;
   }
 }
+
+
+/* スマート表示調整 */
+.detail-top {
+  align-items: flex-start;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.staff-title-row {
+  align-items: center;
+}
+
+.rank-badge {
+  min-width: 44px;
+  min-height: 28px;
+  padding: 3px 10px;
+  font-size: 13px;
+}
+
+.skill-card.expandable {
+  cursor: pointer;
+}
+
+.skill-main {
+  width: 100%;
+}
+
+.skill-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.skill-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-title-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.expand-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.skill-card.expandable.expanded .expand-indicator {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.toggle-subskills-btn {
+  display: none !important;
+}
+
+.skill-controls {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .detail-top {
+    padding: 14px;
+  }
+
+  .staff-title-row {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .detail-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+
+  .detail-actions .sub-btn,
+  .detail-actions .danger-btn {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  .staff-name {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .rank-badge {
+    min-width: 38px;
+    min-height: 24px;
+    padding: 2px 8px;
+    font-size: 12px;
+  }
+
+  .skill-card {
+    padding: 12px;
+  }
+
+  .skill-main {
+    display: block;
+  }
+
+  .skill-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .skill-controls .mini-btn {
+    min-height: 38px;
+    min-width: 38px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .skill-controls .badge {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .subskill-panel {
+    margin-top: 10px;
+    padding: 10px;
+  }
+
+  .subskill-card {
+    padding: 10px;
+  }
+
+  .subskill-controls {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .subskill-controls .badge {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .subskill-controls .mini-btn {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 390px) {
+  .detail-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .detail-actions .sub-btn,
+  .detail-actions .danger-btn {
+    font-size: 12px;
+    padding: 8px 6px;
+  }
+
+  .skill-title {
+    align-items: flex-start;
+  }
+}
