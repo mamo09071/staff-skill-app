@@ -263,8 +263,10 @@ function renderDetail() {
     const card = document.createElement("div");
     card.className = `skill-card${hasSubskills ? " expandable" : ""}${isExpanded ? " expanded" : ""}`;
 
-    const expandIndicatorHtml = hasSubskills
-      ? `<span class="expand-indicator">${isExpanded ? "−" : "+"}</span>`
+    const expandToggleHtml = hasSubskills
+      ? `<button class="expand-toggle-btn" type="button" aria-expanded="${isExpanded ? "true" : "false"}" aria-label="${skill.name}の詳細を${isExpanded ? "閉じる" : "開く"}">
+           <span class="expand-indicator">${isExpanded ? "−" : "+"}</span>
+         </button>`
       : "";
 
     const subskillsHtml = hasSubskills && isExpanded
@@ -285,16 +287,10 @@ function renderDetail() {
       <div class="skill-block">
         <div class="skill-main">
           <div class="skill-left">
-            ${
-              hasSubskills
-                ? `<button class="skill-toggle-area" type="button" aria-expanded="${isExpanded ? "true" : "false"}" aria-label="${skill.name}の詳細を${isExpanded ? "閉じる" : "開く"}">
-                     <div class="skill-title">
-                       ${expandIndicatorHtml}
-                       <span class="skill-title-text">${escapeHtml(skill.name)}</span>
-                     </div>
-                   </button>`
-                : `<div class="skill-title"><span class="skill-title-text">${escapeHtml(skill.name)}</span></div>`
-            }
+            <div class="skill-title">
+              ${expandToggleHtml}
+              <span class="skill-title-text">${escapeHtml(skill.name)}</span>
+            </div>
           </div>
           <div class="skill-controls">
             <button class="badge ${meta.className}" type="button" title="${meta.label}" aria-label="${skill.name}：${meta.label}">
@@ -326,9 +322,10 @@ function renderDetail() {
     });
 
     if (hasSubskills) {
-      const toggleArea = card.querySelector(".skill-toggle-area");
-      bindPress(toggleArea, (event) => {
+      const expandToggleBtn = card.querySelector(".expand-toggle-btn");
+      bindPress(expandToggleBtn, (event) => {
         event.stopPropagation();
+        event.preventDefault();
         toggleSubskillPanel(skill.id);
       });
 

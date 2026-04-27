@@ -1,4 +1,4 @@
-const CACHE_NAME = "staff-skill-pwa-toggle-area-fix-v5";
+const CACHE_NAME = "staff-skill-pwa-toggle-button-only-v6";
 const ASSETS = [
   "./",
   "./index.html",
