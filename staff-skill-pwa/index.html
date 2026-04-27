@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="スキル管理" />
+
+  <title>スタッフスキル管理</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="icon" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">WEGO Store Tool</p>
+        <h1 id="pageTitle">スタッフスキル管理</h1>
+      </div>
+      <button id="backBtn" class="icon-btn hidden" type="button" aria-label="戻る">←</button>
+    </header>
+
+    <main>
+      <!-- スタッフ一覧画面 -->
+      <section id="listView" class="view">
+        <div class="toolbar">
+          <button id="addStaffBtn" class="primary-btn" type="button">＋ スタッフ追加</button>
+        </div>
+
+        <div class="summary-panel">
+          <div>
+            <span class="summary-label">登録スタッフ</span>
+            <strong id="staffTotal">0名</strong>
+          </div>
+          <div>
+            <span class="summary-label">全体の〇</span>
+            <strong id="allGoodTotal">0個</strong>
+          </div>
+        </div>
+
+        <div id="staffList" class="staff-list"></div>
+
+        <div id="emptyStaff" class="empty-state hidden">
+          <p>まだスタッフが登録されていません。</p>
+          <p>「スタッフ追加」から登録してください。</p>
+        </div>
+      </section>
+
+      <!-- スタッフ詳細画面 -->
+      <section id="detailView" class="view hidden">
+        <div class="detail-top">
+          <div>
+            <p class="eyebrow">Staff Detail</p>
+            <h2 id="staffNameTitle"></h2>
+          </div>
+          <div class="detail-actions">
+            <button id="renameStaffBtn" class="sub-btn" type="button">名前編集</button>
+            <button id="deleteStaffBtn" class="danger-btn" type="button">削除</button>
+          </div>
+        </div>
+
+        <div class="status-help">
+          <span><b class="badge good">〇</b> 一人でOK</span>
+          <span><b class="badge almost">△</b> 教えたばかり</span>
+          <span><b class="badge notyet">×</b> 未習得</span>
+        </div>
+
+        <div class="toolbar">
+          <button id="addSkillBtn" class="primary-btn" type="button">＋ スキル追加</button>
+        </div>
+
+        <div id="skillList" class="skill-list"></div>
+      </section>
+    </main>
+
+    <!-- モーダル -->
+    <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <h3 id="modalTitle"></h3>
+        <label id="modalLabel" for="modalInput"></label>
+        <input id="modalInput" class="text-input" type="text" autocomplete="off" />
+        <div class="modal-actions">
+          <button id="cancelModalBtn" class="sub-btn" type="button">キャンセル</button>
+          <button id="saveModalBtn" class="primary-btn" type="button">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
