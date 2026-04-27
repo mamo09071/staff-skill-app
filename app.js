@@ -94,7 +94,6 @@ const elements = {
   staffRankBadge: document.querySelector("#staffRankBadge"),
   renameStaffBtn: document.querySelector("#renameStaffBtn"),
   editRankBtn: document.querySelector("#editRankBtn"),
-  resetSkillsBtn: document.querySelector("#resetSkillsBtn"),
   deleteStaffBtn: document.querySelector("#deleteStaffBtn"),
   addSkillBtn: document.querySelector("#addSkillBtn"),
   skillList: document.querySelector("#skillList"),
@@ -409,19 +408,6 @@ async function updateRank(rank) {
   showToast("等級を更新しました");
 }
 
-
-async function resetSkillsToInitial() {
-  const staff = getCurrentStaff();
-  if (!staff) return;
-
-  if (!confirm("このスタッフのスキルを最新の初期スキル構成に更新しますか？\n現在のスキル一覧は上書きされます。")) return;
-
-  await updateDoc(staffDoc(staff.id), {
-    skills: createInitialSkills(),
-    updatedAt: serverTimestamp()
-  });
-  showToast("最新の初期スキルに更新しました");
-}
 
 async function deleteStaff() {
   const staff = getCurrentStaff();
@@ -788,7 +774,6 @@ elements.addStaffBtn.addEventListener("click", () => openModal("addStaff"));
 elements.backBtn.addEventListener("click", showList);
 elements.renameStaffBtn.addEventListener("click", () => openModal("renameStaff"));
 elements.editRankBtn.addEventListener("click", () => openModal("editRank"));
-elements.resetSkillsBtn.addEventListener("click", resetSkillsToInitial);
 elements.deleteStaffBtn.addEventListener("click", deleteStaff);
 elements.addSkillBtn.addEventListener("click", () => openModal("addSkill"));
 elements.cancelModalBtn.addEventListener("click", closeModal);
