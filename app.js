@@ -1,4 +1,24 @@
-const STORAGE_KEY = "wego_staff_skill_app_v1";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  serverTimestamp,
+  enableIndexedDbPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDmuz0tjC4VC5cU4pPLNb6Wm5SdCZF20Cc",
+  authDomain: "staff-skill-app.firebaseapp.com",
+  projectId: "staff-skill-app",
+  storageBucket: "staff-skill-app.firebasestorage.app",
+  messagingSenderId: "989925814844",
+  appId: "1:989925814844:web:f2dbdb62f24eaaedbcc939"
+};
 
 const INITIAL_SKILLS = [
   "レジ操作",
@@ -29,7 +49,13 @@ const statusMeta = {
   "×": { className: "notyet", label: "まだ教えていない" }
 };
 
-let state = loadState();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const staffCollection = collection(db, "staff");
+
+enableIndexedDbPersistence(db).catch(() => {});
+
+let state = { staff: [] };
 let currentStaffId = null;
 let modalMode = null;
 let modalPayload = null;
@@ -55,7 +81,9 @@ const elements = {
   modalInput: document.querySelector("#modalInput"),
   cancelModalBtn: document.querySelector("#cancelModalBtn"),
   saveModalBtn: document.querySelector("#saveModalBtn"),
-  toast: document.querySelector("#toast")
+  toast: document.querySelector("#toast"),
+  syncDot: document.querySelector("#syncDot"),
+  syncText: document.querySelector("#syncText")
 };
 
 function createId() {
@@ -70,23 +98,49 @@ function createInitialSkills() {
   }));
 }
 
-function loadState() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return { staff: [] };
-    const parsed = JSON.parse(saved);
-    return parsed?.staff ? parsed : { staff: [] };
-  } catch {
-    return { staff: [] };
-  }
+function setSyncStatus(type, text) {
+  elements.syncDot.classList.remove("online", "error");
+  if (type) elements.syncDot.classList.add(type);
+  elements.syncText.textContent = text;
 }
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
+onSnapshot(
+  staffCollection,
+  (snapshot) => {
+    state.staff = snapshot.docs
+      .map((document) => {
+        const data = document.data();
+        return {
+          id: document.id,
+          name: data.name || "",
+          skills: Array.isArray(data.skills) ? data.skills : [],
+          createdAt: data.createdAt || null
+        };
+      })
+      .filter((staff) => staff.name && staff.skills.length > 0)
+      .sort((a, b) => {
+        const aTime = a.createdAt?.seconds || 0;
+        const bTime = b.createdAt?.seconds || 0;
+        return aTime - bTime;
+      });
+
+    setSyncStatus("online", "Firebase同期中");
+    renderStaffList();
+    if (currentStaffId) renderDetail();
+  },
+  (error) => {
+    console.error(error);
+    setSyncStatus("error", "接続エラー：ルール設定を確認してください");
+    showToast("Firebaseに接続できません");
+  }
+);
 
 function getCurrentStaff() {
   return state.staff.find((staff) => staff.id === currentStaffId);
+}
+
+function staffDoc(staffId) {
+  return doc(db, "staff", staffId);
 }
 
 function countStatuses(skills) {
@@ -142,7 +196,7 @@ function renderDetail() {
   elements.skillList.innerHTML = "";
 
   staff.skills.forEach((skill) => {
-    const meta = statusMeta[skill.status];
+    const meta = statusMeta[skill.status] || statusMeta["×"];
     const card = document.createElement("div");
     card.className = "skill-card";
     card.innerHTML = `
@@ -182,66 +236,74 @@ function showDetail(staffId) {
   renderDetail();
 }
 
-function addStaff(name) {
-  state.staff.push({
-    id: createId(),
+async function addStaff(name) {
+  await addDoc(staffCollection, {
     name,
-    skills: createInitialSkills()
+    skills: createInitialSkills(),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
   });
-  saveState();
-  renderStaffList();
   showToast("スタッフを追加しました");
 }
 
-function renameStaff(name) {
+async function renameStaff(name) {
   const staff = getCurrentStaff();
   if (!staff) return;
-  staff.name = name;
-  saveState();
-  renderDetail();
+
+  await updateDoc(staffDoc(staff.id), {
+    name,
+    updatedAt: serverTimestamp()
+  });
   showToast("名前を更新しました");
 }
 
-function deleteStaff() {
+async function deleteStaff() {
   const staff = getCurrentStaff();
   if (!staff) return;
 
   if (!confirm(`${staff.name}さんを削除しますか？\nスキル状況も削除されます。`)) return;
 
-  state.staff = state.staff.filter((item) => item.id !== staff.id);
-  saveState();
+  await deleteDoc(staffDoc(staff.id));
   showList();
   showToast("スタッフを削除しました");
 }
 
-function addSkill(name) {
+async function addSkill(name) {
   const staff = getCurrentStaff();
   if (!staff) return;
 
-  staff.skills.push({
-    id: createId(),
-    name,
-    status: "×"
+  const updatedSkills = [
+    ...staff.skills,
+    {
+      id: createId(),
+      name,
+      status: "×"
+    }
+  ];
+
+  await updateDoc(staffDoc(staff.id), {
+    skills: updatedSkills,
+    updatedAt: serverTimestamp()
   });
-  saveState();
-  renderDetail();
   showToast("スキルを追加しました");
 }
 
-function editSkill(skillId, name) {
+async function editSkill(skillId, name) {
   const staff = getCurrentStaff();
   if (!staff) return;
 
-  const skill = staff.skills.find((item) => item.id === skillId);
-  if (!skill) return;
+  const updatedSkills = staff.skills.map((skill) =>
+    skill.id === skillId ? { ...skill, name } : skill
+  );
 
-  skill.name = name;
-  saveState();
-  renderDetail();
+  await updateDoc(staffDoc(staff.id), {
+    skills: updatedSkills,
+    updatedAt: serverTimestamp()
+  });
   showToast("スキル名を更新しました");
 }
 
-function deleteSkill(skillId) {
+async function deleteSkill(skillId) {
   const staff = getCurrentStaff();
   if (!staff) return;
 
@@ -250,24 +312,32 @@ function deleteSkill(skillId) {
 
   if (!confirm(`「${skill.name}」を削除しますか？`)) return;
 
-  staff.skills = staff.skills.filter((item) => item.id !== skillId);
-  saveState();
-  renderDetail();
+  const updatedSkills = staff.skills.filter((item) => item.id !== skillId);
+
+  await updateDoc(staffDoc(staff.id), {
+    skills: updatedSkills,
+    updatedAt: serverTimestamp()
+  });
   showToast("スキルを削除しました");
 }
 
-function toggleSkillStatus(skillId) {
+async function toggleSkillStatus(skillId) {
   const staff = getCurrentStaff();
   if (!staff) return;
 
-  const skill = staff.skills.find((item) => item.id === skillId);
-  if (!skill) return;
+  const updatedSkills = staff.skills.map((skill) => {
+    if (skill.id !== skillId) return skill;
+    const currentIndex = STATUS_ORDER.indexOf(skill.status);
+    return {
+      ...skill,
+      status: STATUS_ORDER[(currentIndex + 1) % STATUS_ORDER.length]
+    };
+  });
 
-  const currentIndex = STATUS_ORDER.indexOf(skill.status);
-  skill.status = STATUS_ORDER[(currentIndex + 1) % STATUS_ORDER.length];
-
-  saveState();
-  renderDetail();
+  await updateDoc(staffDoc(staff.id), {
+    skills: updatedSkills,
+    updatedAt: serverTimestamp()
+  });
 }
 
 function openModal(mode, payload = null) {
@@ -316,7 +386,7 @@ function closeModal() {
   elements.modalInput.value = "";
 }
 
-function saveModal() {
+async function saveModal() {
   const value = elements.modalInput.value.trim();
 
   if (!value) {
@@ -324,12 +394,16 @@ function saveModal() {
     return;
   }
 
-  if (modalMode === "addStaff") addStaff(value);
-  if (modalMode === "renameStaff") renameStaff(value);
-  if (modalMode === "addSkill") addSkill(value);
-  if (modalMode === "editSkill") editSkill(modalPayload.skillId, value);
-
-  closeModal();
+  try {
+    if (modalMode === "addStaff") await addStaff(value);
+    if (modalMode === "renameStaff") await renameStaff(value);
+    if (modalMode === "addSkill") await addSkill(value);
+    if (modalMode === "editSkill") await editSkill(modalPayload.skillId, value);
+    closeModal();
+  } catch (error) {
+    console.error(error);
+    showToast("保存できませんでした");
+  }
 }
 
 function showToast(message) {

@@ -28,6 +28,11 @@
     <main>
       <!-- スタッフ一覧画面 -->
       <section id="listView" class="view">
+        <div class="sync-status">
+          <span id="syncDot" class="sync-dot"></span>
+          <span id="syncText">Firebaseに接続中...</span>
+        </div>
+
         <div class="toolbar">
           <button id="addStaffBtn" class="primary-btn" type="button">＋ スタッフ追加</button>
         </div>
@@ -94,6 +99,6 @@
     <div id="toast" class="toast hidden"></div>
   </div>
 
-  <script src="./app.js"></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "staff-skill-pwa-v1";
+const CACHE_NAME = "staff-skill-pwa-firebase-v1";
 const ASSETS = [
   "./",
   "./index.html",

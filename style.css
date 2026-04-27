@@ -100,6 +100,36 @@ h3 {
   display: none !important;
 }
 
+
+.sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 4px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.sync-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.sync-dot.online {
+  background: var(--green);
+}
+
+.sync-dot.error {
+  background: var(--red);
+}
+
 .toolbar {
   margin: 14px 0;
 }
