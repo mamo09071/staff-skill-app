@@ -1075,3 +1075,9 @@ h3 {
     height: 30px;
   }
 }
+
+
+.expand-toggle-btn,
+.expand-indicator {
+  display: none !important;
+}

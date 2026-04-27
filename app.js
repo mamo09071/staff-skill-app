@@ -132,7 +132,8 @@ function createInitialSkills() {
           name: subskill.name,
           status: subskill.status || "×"
         }))
-      : []
+      : [],
+    isExpanded: skill.name === "開店作業" || skill.name === "閉店作業"
   }));
 }
 
@@ -152,7 +153,8 @@ function normalizeSkills(skills) {
         id: skill.id || createId(),
         name: skill.name || "",
         status: skill.status || "×",
-        subskills: normalizeSubskills(skill.subskills)
+        subskills: normalizeSubskills(skill.subskills),
+        isExpanded: skill.name === "開店作業" || skill.name === "閉店作業"
       }))
     : [];
 }
@@ -263,13 +265,9 @@ function renderDetail() {
     const card = document.createElement("div");
     card.className = `skill-card${hasSubskills ? " expandable" : ""}${isExpanded ? " expanded" : ""}`;
 
-    const expandToggleHtml = hasSubskills
-      ? `<button class="expand-toggle-btn" type="button" aria-expanded="${isExpanded ? "true" : "false"}" aria-label="${skill.name}の詳細を${isExpanded ? "閉じる" : "開く"}">
-           <span class="expand-indicator">${isExpanded ? "−" : "+"}</span>
-         </button>`
-      : "";
+    const expandToggleHtml = "";
 
-    const subskillsHtml = hasSubskills && isExpanded
+    const subskillsHtml = hasSubskills
       ? `
         <div class="subskill-panel">
           <div class="subskill-header">
@@ -320,14 +318,7 @@ function renderDetail() {
       event.stopPropagation();
       deleteSkill(skill.id);
     });
-
     if (hasSubskills) {
-      const expandToggleBtn = card.querySelector(".expand-toggle-btn");
-      bindPress(expandToggleBtn, (event) => {
-        event.stopPropagation();
-        event.preventDefault();
-        toggleSubskillPanel(skill.id);
-      });
 
       if (isExpanded) {
         bindPress(card.querySelector(".add-subskill-btn"), (event) => {
@@ -381,9 +372,10 @@ function renderDetail() {
 function preserveExpandedState(newSkills, previousSkills = []) {
   return newSkills.map((skill) => {
     const prev = previousSkills.find((item) => item.id === skill.id || item.name === skill.name);
+    const alwaysExpanded = skill.name === "開店作業" || skill.name === "閉店作業";
     return {
       ...skill,
-      isExpanded: Boolean(prev?.isExpanded)
+      isExpanded: alwaysExpanded ? true : Boolean(prev?.isExpanded)
     };
   });
 }
@@ -392,7 +384,9 @@ function toggleSubskillPanel(skillId) {
   const staff = getCurrentStaff();
   if (!staff) return;
   staff.skills = staff.skills.map((skill) =>
-    skill.id === skillId ? { ...skill, isExpanded: !skill.isExpanded } : skill
+    skill.id === skillId && (skill.name === "開店作業" || skill.name === "閉店作業")
+      ? { ...skill, isExpanded: true }
+      : skill
   );
   renderDetail();
 }
