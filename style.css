@@ -445,3 +445,139 @@ h3 {
     flex-direction: row;
   }
 }
+
+
+.staff-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  min-height: 34px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.staff-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.staff-rank-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+
+.skill-block {
+  display: grid;
+  gap: 10px;
+}
+
+.skill-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skill-left {
+  min-width: 0;
+}
+
+.subskill-panel {
+  margin-top: 2px;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.subskill-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.subskill-title {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.subskill-list {
+  display: grid;
+  gap: 8px;
+}
+
+.subskill-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.subskill-name {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.subskill-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.toggle-subskills-btn {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  background: #fff;
+  font-weight: 800;
+}
+
+.subskill-empty {
+  padding: 12px;
+  color: var(--muted);
+  text-align: center;
+  background: #fff;
+  border: 1px dashed #d1d5db;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}

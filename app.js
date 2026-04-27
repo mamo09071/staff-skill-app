@@ -21,24 +21,40 @@ const firebaseConfig = {
 };
 
 const INITIAL_SKILLS = [
-  "レジ操作",
-  "返品対応",
-  "裾上げ受付",
-  "フィッティング案内",
-  "店内用バッグ渡し",
-  "商品補充",
-  "ストック整理",
-  "売場作成",
-  "マネキン着せ替え",
-  "Markdown対応",
-  "特売準備",
-  "アプリ会員獲得",
-  "声かけ接客",
-  "電話対応",
-  "クレーム一次対応",
-  "清掃／クリンネス",
-  "朝礼内容の理解",
-  "閉店作業"
+  { name: "レジ操作", status: "×" },
+  { name: "店内用バッグ渡し", status: "×" },
+  { name: "商品補充", status: "×" },
+  { name: "ストック整理", status: "×" },
+  { name: "売場作成", status: "×" },
+  { name: "マネキン着せ替え", status: "×" },
+  { name: "特売準備", status: "×" },
+  { name: "電話対応", status: "×" },
+  { name: "清掃／クリンネス", status: "×" },
+  { name: "レジ締め", status: "×" },
+  { name: "入荷処理", status: "×" },
+  { name: "開店準備", status: "×" },
+  { name: "マークダウン作業", status: "×" },
+  { name: "フィッティング対応", status: "×" },
+  { name: "ZOZO集約", status: "×" },
+  {
+    name: "開店作業",
+    status: "×",
+    subskills: [
+      { name: "レジ開", status: "×" },
+      { name: "クリンネス", status: "×" },
+      { name: "テレビBGM電気", status: "×" }
+    ]
+  },
+  {
+    name: "閉店作業",
+    status: "×",
+    subskills: [
+      { name: "レジ締め", status: "×" },
+      { name: "PC入力", status: "×" },
+      { name: "WS書込み", status: "×" },
+      { name: "日報一言メモ", status: "×" }
+    ]
+  }
 ];
 
 const STATUS_ORDER = ["×", "△", "〇"];
@@ -48,6 +64,9 @@ const statusMeta = {
   "△": { className: "almost", label: "教えたばかり／一人では完結できない" },
   "×": { className: "notyet", label: "まだ教えていない" }
 };
+
+const RANK_OPTIONS = ["JS", "S", "SS", "TR", "SM"];
+const DEFAULT_RANK = "JS";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -59,6 +78,8 @@ let state = { staff: [] };
 let currentStaffId = null;
 let modalMode = null;
 let modalPayload = null;
+let subskillModalMode = null;
+let subskillModalPayload = null;
 
 const elements = {
   pageTitle: document.querySelector("#pageTitle"),
@@ -68,19 +89,29 @@ const elements = {
   staffList: document.querySelector("#staffList"),
   emptyStaff: document.querySelector("#emptyStaff"),
   staffTotal: document.querySelector("#staffTotal"),
-  allGoodTotal: document.querySelector("#allGoodTotal"),
   addStaffBtn: document.querySelector("#addStaffBtn"),
   staffNameTitle: document.querySelector("#staffNameTitle"),
+  staffRankBadge: document.querySelector("#staffRankBadge"),
   renameStaffBtn: document.querySelector("#renameStaffBtn"),
+  editRankBtn: document.querySelector("#editRankBtn"),
   deleteStaffBtn: document.querySelector("#deleteStaffBtn"),
   addSkillBtn: document.querySelector("#addSkillBtn"),
   skillList: document.querySelector("#skillList"),
   modal: document.querySelector("#modal"),
   modalTitle: document.querySelector("#modalTitle"),
   modalLabel: document.querySelector("#modalLabel"),
+  modalTextWrap: document.querySelector("#modalTextWrap"),
+  modalRankWrap: document.querySelector("#modalRankWrap"),
   modalInput: document.querySelector("#modalInput"),
+  modalRankSelect: document.querySelector("#modalRankSelect"),
   cancelModalBtn: document.querySelector("#cancelModalBtn"),
   saveModalBtn: document.querySelector("#saveModalBtn"),
+  subskillModal: document.querySelector("#subskillModal"),
+  subskillModalTitle: document.querySelector("#subskillModalTitle"),
+  subskillModalLabel: document.querySelector("#subskillModalLabel"),
+  subskillModalInput: document.querySelector("#subskillModalInput"),
+  cancelSubskillModalBtn: document.querySelector("#cancelSubskillModalBtn"),
+  saveSubskillModalBtn: document.querySelector("#saveSubskillModalBtn"),
   toast: document.querySelector("#toast"),
   syncDot: document.querySelector("#syncDot"),
   syncText: document.querySelector("#syncText")
@@ -91,11 +122,39 @@ function createId() {
 }
 
 function createInitialSkills() {
-  return INITIAL_SKILLS.map((name) => ({
+  return INITIAL_SKILLS.map((skill) => ({
     id: createId(),
-    name,
-    status: "×"
+    name: skill.name,
+    status: skill.status || "×",
+    subskills: Array.isArray(skill.subskills)
+      ? skill.subskills.map((subskill) => ({
+          id: createId(),
+          name: subskill.name,
+          status: subskill.status || "×"
+        }))
+      : []
   }));
+}
+
+function normalizeSubskills(subskills) {
+  return Array.isArray(subskills)
+    ? subskills.map((subskill) => ({
+        id: subskill.id || createId(),
+        name: subskill.name || "",
+        status: subskill.status || "×"
+      }))
+    : [];
+}
+
+function normalizeSkills(skills) {
+  return Array.isArray(skills)
+    ? skills.map((skill) => ({
+        id: skill.id || createId(),
+        name: skill.name || "",
+        status: skill.status || "×",
+        subskills: normalizeSubskills(skill.subskills)
+      }))
+    : [];
 }
 
 function setSyncStatus(type, text) {
@@ -113,7 +172,8 @@ onSnapshot(
         return {
           id: document.id,
           name: data.name || "",
-          skills: Array.isArray(data.skills) ? data.skills : [],
+          rank: RANK_OPTIONS.includes(data.rank) ? data.rank : DEFAULT_RANK,
+          skills: normalizeSkills(data.skills),
           createdAt: data.createdAt || null
         };
       })
@@ -157,11 +217,6 @@ function renderStaffList() {
   elements.staffList.innerHTML = "";
 
   elements.staffTotal.textContent = `${state.staff.length}名`;
-  const allGood = state.staff.reduce((total, staff) => {
-    return total + countStatuses(staff.skills)["〇"];
-  }, 0);
-  elements.allGoodTotal.textContent = `${allGood}個`;
-
   elements.emptyStaff.classList.toggle("hidden", state.staff.length !== 0);
 
   state.staff.forEach((staff) => {
@@ -171,7 +226,10 @@ function renderStaffList() {
     button.type = "button";
     button.innerHTML = `
       <div>
-        <span class="staff-name">${escapeHtml(staff.name)}</span>
+        <div class="staff-name-row">
+          <span class="staff-name">${escapeHtml(staff.name)}</span>
+          <span class="staff-rank-inline">${escapeHtml(staff.rank || DEFAULT_RANK)}</span>
+        </div>
         <div class="count-row">
           <span class="count-pill good">〇 ${counts["〇"]}個</span>
           <span class="count-pill almost">△ ${counts["△"]}個</span>
@@ -193,20 +251,52 @@ function renderDetail() {
   }
 
   elements.staffNameTitle.textContent = staff.name;
+  elements.staffRankBadge.textContent = staff.rank || DEFAULT_RANK;
+  elements.staffRankBadge.classList.remove("hidden");
   elements.skillList.innerHTML = "";
 
   staff.skills.forEach((skill) => {
     const meta = statusMeta[skill.status] || statusMeta["×"];
+    const hasSubskills = skill.name === "開店作業" || skill.name === "閉店作業";
+    const isExpanded = Boolean(skill.isExpanded);
+
     const card = document.createElement("div");
     card.className = "skill-card";
+
+    const subskillButtonHtml = hasSubskills
+      ? `<button class="toggle-subskills-btn" type="button">${isExpanded ? "詳細を閉じる" : "詳細を見る"}</button>`
+      : "";
+
+    const subskillsHtml = hasSubskills && isExpanded
+      ? `
+        <div class="subskill-panel">
+          <div class="subskill-header">
+            <span class="subskill-title">${escapeHtml(skill.name)}の詳細スキル</span>
+            <button class="sub-btn add-subskill-btn" type="button">＋ 詳細追加</button>
+          </div>
+          <div class="subskill-list">
+            ${skill.subskills.length === 0 ? `<div class="subskill-empty">まだ詳細スキルがありません</div>` : ""}
+          </div>
+        </div>
+      `
+      : "";
+
     card.innerHTML = `
-      <div class="skill-title">${escapeHtml(skill.name)}</div>
-      <div class="skill-controls">
-        <button class="badge ${meta.className}" type="button" title="${meta.label}" aria-label="${skill.name}：${meta.label}">
-          ${skill.status}
-        </button>
-        <button class="mini-btn edit-skill" type="button" aria-label="${skill.name}を編集">編集</button>
-        <button class="mini-btn delete-skill" type="button" aria-label="${skill.name}を削除">削除</button>
+      <div class="skill-block">
+        <div class="skill-main">
+          <div class="skill-left">
+            <div class="skill-title">${escapeHtml(skill.name)}</div>
+          </div>
+          <div class="skill-controls">
+            ${subskillButtonHtml}
+            <button class="badge ${meta.className}" type="button" title="${meta.label}" aria-label="${skill.name}：${meta.label}">
+              ${skill.status}
+            </button>
+            <button class="mini-btn edit-skill" type="button" aria-label="${skill.name}を編集">編集</button>
+            <button class="mini-btn delete-skill" type="button" aria-label="${skill.name}を削除">削除</button>
+          </div>
+        </div>
+        ${subskillsHtml}
       </div>
     `;
 
@@ -214,8 +304,57 @@ function renderDetail() {
     card.querySelector(".edit-skill").addEventListener("click", () => openModal("editSkill", { skillId: skill.id }));
     card.querySelector(".delete-skill").addEventListener("click", () => deleteSkill(skill.id));
 
+    if (hasSubskills) {
+      card.querySelector(".toggle-subskills-btn").addEventListener("click", () => toggleSubskillPanel(skill.id));
+
+      if (isExpanded) {
+        card.querySelector(".add-subskill-btn").addEventListener("click", () => openSubskillModal("addSubskill", { skillId: skill.id }));
+        const subskillList = card.querySelector(".subskill-list");
+
+        skill.subskills.forEach((subskill) => {
+          const subMeta = statusMeta[subskill.status] || statusMeta["×"];
+          const row = document.createElement("div");
+          row.className = "subskill-card";
+          row.innerHTML = `
+            <div class="subskill-name">${escapeHtml(subskill.name)}</div>
+            <div class="subskill-controls">
+              <button class="badge ${subMeta.className}" type="button" title="${subMeta.label}" aria-label="${subskill.name}：${subMeta.label}">
+                ${subskill.status}
+              </button>
+              <button class="mini-btn edit-subskill" type="button">編集</button>
+              <button class="mini-btn delete-subskill" type="button">削除</button>
+            </div>
+          `;
+          row.querySelector(".badge").addEventListener("click", () => toggleSubskillStatus(skill.id, subskill.id));
+          row.querySelector(".edit-subskill").addEventListener("click", () => openSubskillModal("editSubskill", { skillId: skill.id, subskillId: subskill.id }));
+          row.querySelector(".delete-subskill").addEventListener("click", () => deleteSubskill(skill.id, subskill.id));
+          subskillList.appendChild(row);
+        });
+      }
+    }
+
     elements.skillList.appendChild(card);
   });
+}
+
+
+function preserveExpandedState(newSkills, previousSkills = []) {
+  return newSkills.map((skill) => {
+    const prev = previousSkills.find((item) => item.id === skill.id || item.name === skill.name);
+    return {
+      ...skill,
+      isExpanded: Boolean(prev?.isExpanded)
+    };
+  });
+}
+
+function toggleSubskillPanel(skillId) {
+  const staff = getCurrentStaff();
+  if (!staff) return;
+  staff.skills = staff.skills.map((skill) =>
+    skill.id === skillId ? { ...skill, isExpanded: !skill.isExpanded } : skill
+  );
+  renderDetail();
 }
 
 function showList() {
@@ -236,9 +375,10 @@ function showDetail(staffId) {
   renderDetail();
 }
 
-async function addStaff(name) {
+async function addStaff(name, rank = DEFAULT_RANK) {
   await addDoc(staffCollection, {
     name,
+    rank,
     skills: createInitialSkills(),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
@@ -257,6 +397,17 @@ async function renameStaff(name) {
   showToast("名前を更新しました");
 }
 
+async function updateRank(rank) {
+  const staff = getCurrentStaff();
+  if (!staff) return;
+
+  await updateDoc(staffDoc(staff.id), {
+    rank,
+    updatedAt: serverTimestamp()
+  });
+  showToast("等級を更新しました");
+}
+
 async function deleteStaff() {
   const staff = getCurrentStaff();
   if (!staff) return;
@@ -272,17 +423,18 @@ async function addSkill(name) {
   const staff = getCurrentStaff();
   if (!staff) return;
 
-  const updatedSkills = [
+  const updatedSkills = preserveExpandedState([
     ...staff.skills,
     {
       id: createId(),
       name,
-      status: "×"
+      status: "×",
+      subskills: []
     }
-  ];
+  ], staff.skills);
 
   await updateDoc(staffDoc(staff.id), {
-    skills: updatedSkills,
+    skills: updatedSkills.map(({ isExpanded, ...skill }) => skill),
     updatedAt: serverTimestamp()
   });
   showToast("スキルを追加しました");
@@ -292,12 +444,15 @@ async function editSkill(skillId, name) {
   const staff = getCurrentStaff();
   if (!staff) return;
 
-  const updatedSkills = staff.skills.map((skill) =>
-    skill.id === skillId ? { ...skill, name } : skill
+  const updatedSkills = preserveExpandedState(
+    staff.skills.map((skill) =>
+      skill.id === skillId ? { ...skill, name } : skill
+    ),
+    staff.skills
   );
 
   await updateDoc(staffDoc(staff.id), {
-    skills: updatedSkills,
+    skills: updatedSkills.map(({ isExpanded, ...skill }) => skill),
     updatedAt: serverTimestamp()
   });
   showToast("スキル名を更新しました");
@@ -312,10 +467,13 @@ async function deleteSkill(skillId) {
 
   if (!confirm(`「${skill.name}」を削除しますか？`)) return;
 
-  const updatedSkills = staff.skills.filter((item) => item.id !== skillId);
+  const updatedSkills = preserveExpandedState(
+    staff.skills.filter((item) => item.id !== skillId),
+    staff.skills
+  );
 
   await updateDoc(staffDoc(staff.id), {
-    skills: updatedSkills,
+    skills: updatedSkills.map(({ isExpanded, ...skill }) => skill),
     updatedAt: serverTimestamp()
   });
   showToast("スキルを削除しました");
@@ -325,19 +483,175 @@ async function toggleSkillStatus(skillId) {
   const staff = getCurrentStaff();
   if (!staff) return;
 
-  const updatedSkills = staff.skills.map((skill) => {
-    if (skill.id !== skillId) return skill;
-    const currentIndex = STATUS_ORDER.indexOf(skill.status);
-    return {
-      ...skill,
-      status: STATUS_ORDER[(currentIndex + 1) % STATUS_ORDER.length]
-    };
-  });
+  const updatedSkills = preserveExpandedState(
+    staff.skills.map((skill) => {
+      if (skill.id !== skillId) return skill;
+      const currentIndex = STATUS_ORDER.indexOf(skill.status);
+      return {
+        ...skill,
+        status: STATUS_ORDER[(currentIndex + 1) % STATUS_ORDER.length]
+      };
+    }),
+    staff.skills
+  );
 
   await updateDoc(staffDoc(staff.id), {
-    skills: updatedSkills,
+    skills: updatedSkills.map(({ isExpanded, ...skill }) => skill),
     updatedAt: serverTimestamp()
   });
+}
+
+
+async function addSubskill(skillId, name) {
+  const staff = getCurrentStaff();
+  if (!staff) return;
+
+  const updatedSkills = preserveExpandedState(
+    staff.skills.map((skill) =>
+      skill.id === skillId
+        ? {
+            ...skill,
+            subskills: [...normalizeSubskills(skill.subskills), { id: createId(), name, status: "×" }],
+            isExpanded: true
+          }
+        : skill
+    ),
+    staff.skills
+  );
+
+  await updateDoc(staffDoc(staff.id), {
+    skills: updatedSkills.map(({ isExpanded, ...skill }) => skill),
+    updatedAt: serverTimestamp()
+  });
+  showToast("詳細スキルを追加しました");
+}
+
+async function editSubskill(skillId, subskillId, name) {
+  const staff = getCurrentStaff();
+  if (!staff) return;
+
+  const updatedSkills = preserveExpandedState(
+    staff.skills.map((skill) =>
+      skill.id === skillId
+        ? {
+            ...skill,
+            subskills: normalizeSubskills(skill.subskills).map((subskill) =>
+              subskill.id === subskillId ? { ...subskill, name } : subskill
+            ),
+            isExpanded: true
+          }
+        : skill
+    ),
+    staff.skills
+  );
+
+  await updateDoc(staffDoc(staff.id), {
+    skills: updatedSkills.map(({ isExpanded, ...skill }) => skill),
+    updatedAt: serverTimestamp()
+  });
+  showToast("詳細スキル名を更新しました");
+}
+
+async function deleteSubskill(skillId, subskillId) {
+  const staff = getCurrentStaff();
+  if (!staff) return;
+
+  const targetSkill = staff.skills.find((skill) => skill.id === skillId);
+  const subskill = targetSkill?.subskills?.find((item) => item.id === subskillId);
+  if (!subskill) return;
+
+  if (!confirm(`「${subskill.name}」を削除しますか？`)) return;
+
+  const updatedSkills = preserveExpandedState(
+    staff.skills.map((skill) =>
+      skill.id === skillId
+        ? {
+            ...skill,
+            subskills: normalizeSubskills(skill.subskills).filter((subskill) => subskill.id !== subskillId),
+            isExpanded: true
+          }
+        : skill
+    ),
+    staff.skills
+  );
+
+  await updateDoc(staffDoc(staff.id), {
+    skills: updatedSkills.map(({ isExpanded, ...skill }) => skill),
+    updatedAt: serverTimestamp()
+  });
+  showToast("詳細スキルを削除しました");
+}
+
+async function toggleSubskillStatus(skillId, subskillId) {
+  const staff = getCurrentStaff();
+  if (!staff) return;
+
+  const updatedSkills = preserveExpandedState(
+    staff.skills.map((skill) => {
+      if (skill.id !== skillId) return skill;
+      return {
+        ...skill,
+        subskills: normalizeSubskills(skill.subskills).map((subskill) => {
+          if (subskill.id !== subskillId) return subskill;
+          const currentIndex = STATUS_ORDER.indexOf(subskill.status);
+          return {
+            ...subskill,
+            status: STATUS_ORDER[(currentIndex + 1) % STATUS_ORDER.length]
+          };
+        }),
+        isExpanded: true
+      };
+    }),
+    staff.skills
+  );
+
+  await updateDoc(staffDoc(staff.id), {
+    skills: updatedSkills.map(({ isExpanded, ...skill }) => skill),
+    updatedAt: serverTimestamp()
+  });
+}
+
+function openSubskillModal(mode, payload = null) {
+  subskillModalMode = mode;
+  subskillModalPayload = payload;
+
+  const staff = getCurrentStaff();
+  const skill = staff?.skills.find((item) => item.id === payload.skillId);
+  const subskill = skill?.subskills?.find((item) => item.id === payload.subskillId);
+
+  elements.subskillModalTitle.textContent = mode === "addSubskill" ? "詳細スキル追加" : "詳細スキル編集";
+  elements.subskillModalLabel.textContent = `${skill?.name || ""}の詳細スキル名`;
+  elements.subskillModalInput.value = mode === "editSubskill" ? (subskill?.name || "") : "";
+  elements.subskillModal.classList.remove("hidden");
+  setTimeout(() => elements.subskillModalInput.focus(), 50);
+}
+
+function closeSubskillModal() {
+  subskillModalMode = null;
+  subskillModalPayload = null;
+  elements.subskillModal.classList.add("hidden");
+  elements.subskillModalInput.value = "";
+}
+
+async function saveSubskillModal() {
+  const value = elements.subskillModalInput.value.trim();
+  if (!value) {
+    showToast("入力してください");
+    return;
+  }
+
+  try {
+    if (subskillModalMode === "addSubskill") {
+      await addSubskill(subskillModalPayload.skillId, value);
+    }
+    if (subskillModalMode === "editSubskill") {
+      await editSubskill(subskillModalPayload.skillId, subskillModalPayload.subskillId, value);
+    }
+    closeSubskillModal();
+  } catch (error) {
+    console.error(error);
+    showToast("保存できませんでした");
+  }
 }
 
 function openModal(mode, payload = null) {
@@ -348,16 +662,27 @@ function openModal(mode, payload = null) {
   let title = "";
   let label = "";
   let value = "";
+  let rankValue = DEFAULT_RANK;
+  let useRankSelect = false;
 
   if (mode === "addStaff") {
     title = "スタッフ追加";
     label = "スタッフ名";
+    rankValue = DEFAULT_RANK;
+    useRankSelect = true;
   }
 
   if (mode === "renameStaff" && staff) {
     title = "スタッフ名編集";
     label = "スタッフ名";
     value = staff.name;
+  }
+
+  if (mode === "editRank" && staff) {
+    title = "等級変更";
+    label = "スタッフ等級";
+    rankValue = staff.rank || DEFAULT_RANK;
+    useRankSelect = true;
   }
 
   if (mode === "addSkill") {
@@ -375,8 +700,17 @@ function openModal(mode, payload = null) {
   elements.modalTitle.textContent = title;
   elements.modalLabel.textContent = label;
   elements.modalInput.value = value;
+  elements.modalRankSelect.value = rankValue;
+  elements.modalTextWrap.classList.toggle("hidden", useRankSelect);
+  elements.modalRankWrap.classList.toggle("hidden", !useRankSelect);
   elements.modal.classList.remove("hidden");
-  setTimeout(() => elements.modalInput.focus(), 50);
+  setTimeout(() => {
+    if (useRankSelect) {
+      elements.modalRankSelect.focus();
+    } else {
+      elements.modalInput.focus();
+    }
+  }, 50);
 }
 
 function closeModal() {
@@ -384,19 +718,29 @@ function closeModal() {
   modalPayload = null;
   elements.modal.classList.add("hidden");
   elements.modalInput.value = "";
+  elements.modalRankSelect.value = DEFAULT_RANK;
+  elements.modalTextWrap.classList.remove("hidden");
+  elements.modalRankWrap.classList.add("hidden");
 }
 
 async function saveModal() {
   const value = elements.modalInput.value.trim();
+  const rankValue = elements.modalRankSelect.value;
 
-  if (!value) {
+  if (modalMode === "addStaff" && !value) {
+    showToast("スタッフ名を入力してください");
+    return;
+  }
+
+  if ((modalMode === "renameStaff" || modalMode === "addSkill" || modalMode === "editSkill") && !value) {
     showToast("入力してください");
     return;
   }
 
   try {
-    if (modalMode === "addStaff") await addStaff(value);
+    if (modalMode === "addStaff") await addStaff(value, rankValue);
     if (modalMode === "renameStaff") await renameStaff(value);
+    if (modalMode === "editRank") await updateRank(rankValue);
     if (modalMode === "addSkill") await addSkill(value);
     if (modalMode === "editSkill") await editSkill(modalPayload.skillId, value);
     closeModal();
@@ -428,10 +772,13 @@ function escapeHtml(text) {
 elements.addStaffBtn.addEventListener("click", () => openModal("addStaff"));
 elements.backBtn.addEventListener("click", showList);
 elements.renameStaffBtn.addEventListener("click", () => openModal("renameStaff"));
+elements.editRankBtn.addEventListener("click", () => openModal("editRank"));
 elements.deleteStaffBtn.addEventListener("click", deleteStaff);
 elements.addSkillBtn.addEventListener("click", () => openModal("addSkill"));
 elements.cancelModalBtn.addEventListener("click", closeModal);
 elements.saveModalBtn.addEventListener("click", saveModal);
+elements.cancelSubskillModalBtn.addEventListener("click", closeSubskillModal);
+elements.saveSubskillModalBtn.addEventListener("click", saveSubskillModal);
 
 elements.modal.addEventListener("click", (event) => {
   if (event.target === elements.modal) closeModal();
@@ -440,6 +787,15 @@ elements.modal.addEventListener("click", (event) => {
 elements.modalInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") saveModal();
   if (event.key === "Escape") closeModal();
+});
+
+elements.subskillModal.addEventListener("click", (event) => {
+  if (event.target === elements.subskillModal) closeSubskillModal();
+});
+
+elements.subskillModalInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") saveSubskillModal();
+  if (event.key === "Escape") closeSubskillModal();
 });
 
 if ("serviceWorker" in navigator) {

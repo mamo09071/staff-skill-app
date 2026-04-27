@@ -42,10 +42,6 @@
             <span class="summary-label">登録スタッフ</span>
             <strong id="staffTotal">0名</strong>
           </div>
-          <div>
-            <span class="summary-label">全体の〇</span>
-            <strong id="allGoodTotal">0個</strong>
-          </div>
         </div>
 
         <div id="staffList" class="staff-list"></div>
@@ -61,10 +57,10 @@
         <div class="detail-top">
           <div>
             <p class="eyebrow">Staff Detail</p>
-            <h2 id="staffNameTitle"></h2>
+            <div class="staff-title-row"><h2 id="staffNameTitle"></h2><span id="staffRankBadge" class="rank-badge hidden"></span></div>
           </div>
           <div class="detail-actions">
-            <button id="renameStaffBtn" class="sub-btn" type="button">名前編集</button>
+            <button id="renameStaffBtn" class="sub-btn" type="button">名前編集</button><button id="editRankBtn" class="sub-btn" type="button">等級変更</button>
             <button id="deleteStaffBtn" class="danger-btn" type="button">削除</button>
           </div>
         </div>
@@ -88,7 +84,18 @@
       <div class="modal-card">
         <h3 id="modalTitle"></h3>
         <label id="modalLabel" for="modalInput"></label>
+        <div id="modalTextWrap">
         <input id="modalInput" class="text-input" type="text" autocomplete="off" />
+      </div>
+      <div id="modalRankWrap" class="hidden">
+        <select id="modalRankSelect" class="text-input">
+          <option value="JS">JS（ジュニアスタッフ）</option>
+          <option value="S">S（スタッフ）</option>
+          <option value="SS">SS（シニアスタッフ）</option>
+          <option value="TR">TR（トレーナー）</option>
+          <option value="SM">SM（スイングマネージャー）</option>
+        </select>
+      </div>
         <div class="modal-actions">
           <button id="cancelModalBtn" class="sub-btn" type="button">キャンセル</button>
           <button id="saveModalBtn" class="primary-btn" type="button">保存</button>
@@ -96,7 +103,21 @@
       </div>
     </div>
 
+    
+    <div id="subskillModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <h3 id="subskillModalTitle"></h3>
+        <label id="subskillModalLabel" for="subskillModalInput"></label>
+        <input id="subskillModalInput" class="text-input" type="text" autocomplete="off" />
+        <div class="modal-actions">
+          <button id="cancelSubskillModalBtn" class="sub-btn" type="button">キャンセル</button>
+          <button id="saveSubskillModalBtn" class="primary-btn" type="button">保存</button>
+        </div>
+      </div>
+    </div>
+
     <div id="toast" class="toast hidden"></div>
+
   </div>
 
   <script type="module" src="./app.js"></script>
